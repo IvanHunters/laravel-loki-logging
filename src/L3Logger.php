@@ -45,15 +45,23 @@ class L3Logger implements HandlerInterface
     public function handle(array $record): bool
     {
         $this->hasError |= $record['level_name'] === 'ERROR';
-        $message = $this->formatString($this->format, $record);
+        $message = $record['message'];
         $tags = array_merge($record['context'], $this->context);
-        foreach ($tags as $tag => $value) {
-            if (is_string($value)) {
-                $tags[$tag] = $this->formatString($value, $record);
-            } else {
-                unset($tags[$tag]);
+        if (preg_match($this->format, "[TEST] " . $message, $matches)) {
+            foreach ($tags as $tag => $value) {
+                $cleanValue = preg_replace("/[\{|\}]/", "",  $value);
+                if (isset($matches[$tag]) && !empty($matches[$tag])) {
+                    $tags[$tag] = $matches[$tag];
+                } elseif(isset($record[$cleanValue])) {
+                    $tags[$tag] = $record[$cleanValue];
+                } elseif(!preg_match("/\{/", $tag)) {
+                    $tags[$tag] = $value;
+                } else {
+                    unset($tags[$tag]);
+                }
             }
         }
+
         fwrite($this->file, json_encode([
                 'time' => now()->getPreciseTimestamp(),
                 'tags' => $tags,
@@ -82,17 +90,17 @@ class L3Logger implements HandlerInterface
         fclose($this->file);
     }
 
-    private function formatString(string $format, array $context): string
+    private function formatString(string $format, string $context): string
     {
         $message = $format;
-        foreach ($context as $key => $value) {
-            if (!is_string($value)) continue;
-            $message = str_replace(
-                sprintf('{%s}', $key),
-                $value,
-                $message
-            );
+        preg_match(
+            sprintf('{%s}', $key),
+            $message,
+            $matches
+        );
+        if (isset($matches[0])) {
+            $a = 1;
         }
-        return $message;
+        return '';
     }
 }
