@@ -54,11 +54,12 @@ class L3Logger implements HandlerInterface
                 unset($tags[$tag]);
             }
         }
-        return fwrite($this->file, json_encode([
+        fwrite($this->file, json_encode([
                 'time' => now()->getPreciseTimestamp(),
                 'tags' => $tags,
                 'message' => $message
             ]) . "\n");
+        return true;
     }
 
     public function handleBatch(array $records): void
