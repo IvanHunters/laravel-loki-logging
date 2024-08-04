@@ -1,5 +1,5 @@
 {
-    "name": "elgibor-solution/laravel-loki-logging",
+    "name": "lichi/laravel-loki-logging",
     "version": "1.0.0",
     "description": "Logging to Loki for Laravel (PHP 8)",
     "type": "library",
