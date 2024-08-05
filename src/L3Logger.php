@@ -46,7 +46,7 @@ class L3Logger implements HandlerInterface
     {
         $this->hasError |= $record['level_name'] === 'ERROR';
         $message = $record['message'];
-        $tags = array_merge($record['context'], $this->context);
+        $tags = $this->context;
         if (preg_match($this->format, "[TEST] " . $message, $matches)) {
             foreach ($tags as $tag => $value) {
                 $cleanValue = preg_replace("/[\{|\}]/", "",  $value);
@@ -60,6 +60,13 @@ class L3Logger implements HandlerInterface
                     unset($tags[$tag]);
                 }
             }
+        }
+        if (isset($record['context']['exception'])) {
+            $exception = $record['context']['exception'];
+            $tags['exception']['trace'] = $exception->getTraceAsString();
+            $tags['exception']['message'] = $exception->getMessage();
+            $tags['exception']['file'] = $exception->getFile();
+            $tags['exception']['line'] = $exception->getLine();
         }
 
         fwrite($this->file, json_encode([
