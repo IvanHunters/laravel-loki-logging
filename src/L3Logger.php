@@ -54,19 +54,22 @@ class L3Logger implements HandlerInterface
                     $tags[$tag] = $matches[$tag];
                 } elseif(isset($record[$cleanValue])) {
                     $tags[$tag] = $record[$cleanValue];
-                } elseif(!preg_match("/\{/", $tag)) {
+                } elseif(!preg_match("/\{/", $tag) && !preg_match("/\{/", $value)) {
                     $tags[$tag] = $value;
                 } else {
                     unset($tags[$tag]);
                 }
             }
         }
+        $data = [];
         if (isset($record['context']['exception'])) {
             $exception = $record['context']['exception'];
-            $tags['exception']['trace'] = $exception->getTraceAsString();
-            $tags['exception']['message'] = $exception->getMessage();
-            $tags['exception']['file'] = $exception->getFile();
-            $tags['exception']['line'] = $exception->getLine();
+            $data['trace'] = $exception->getTraceAsString();
+            $data['message'] = $exception->getMessage();
+            $data['file'] = $exception->getFile();
+            $data['line'] = $exception->getLine();
+            $tags['exception'] = sprintf("[ERROR] %s:%s", $data['file'], $data['line']);
+            $message = $data['trace'];
         }
 
         fwrite($this->file, json_encode([
